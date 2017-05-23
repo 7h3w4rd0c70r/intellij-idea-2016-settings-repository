@@ -10,7 +10,7 @@ module.exports = {
         gallery: path.resolve(__dirname, 'src/index.jsx')
     },
     output: {
-        publicPath: '/haxe_intro/lesson_2',
+        publicPath: '/haxe_intro/lesson_2/dist',
         path: __dirname + '/dist',
         filename: '[name].[chunkhash].js'
     },
