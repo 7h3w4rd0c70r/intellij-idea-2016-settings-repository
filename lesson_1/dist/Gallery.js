@@ -6,6 +6,20 @@ function $extend(from, fields) {
 	if( fields.toString !== Object.prototype.toString ) proto.toString = fields.toString;
 	return proto;
 }
+var Gallery = function() {
+};
+Gallery.__name__ = true;
+Gallery.prototype = {
+	load: function() {
+		var galleryLoader = new loaders_Gallery();
+		galleryLoader.listen($bind(this,this.onLoad));
+		galleryLoader.load();
+	}
+	,onLoad: function(gallery) {
+		var galleryViewer = new viewers_Gallery(gallery);
+		galleryViewer.mount("gallery");
+	}
+};
 var HxOverrides = function() { };
 HxOverrides.__name__ = true;
 HxOverrides.cca = function(s,index) {
@@ -26,6 +40,12 @@ HxOverrides.substr = function(s,pos,len) {
 		}
 	}
 	return s.substr(pos,len);
+};
+var Main = function() { };
+Main.__name__ = true;
+Main.main = function() {
+	var gallery = new Gallery();
+	gallery.load();
 };
 Math.__name__ = true;
 var Reflect = function() { };
@@ -204,6 +224,45 @@ js_Browser.createXMLHttpRequest = function() {
 	}
 	throw new js__$Boot_HaxeError("Unable to create XMLHttpRequest object.");
 };
+var loaders_Loader = function(signal,parser,restUrl) {
+	if(restUrl == null) {
+		restUrl = "";
+	}
+	this.baseUrl = "http://localhost/gallery";
+	this.restUrl = restUrl;
+	this.signal = signal;
+	this.parser = parser;
+};
+loaders_Loader.__name__ = true;
+loaders_Loader.prototype = {
+	load: function() {
+		var request = new yloader_valueObject_Request(this.baseUrl + this.restUrl);
+		var loader = new yloader_impl_js_XMLHttpRequestLoader(request);
+		loader.onResponse = $bind(this,this.onResponse);
+		loader.load();
+	}
+	,onResponse: function(response) {
+		if(response.success) {
+			this.signal.dispatch(this.parser(JSON.parse(response.data)));
+		} else {
+			console.log("Error: ");
+			console.log(response);
+		}
+	}
+};
+var loaders_Gallery = function() {
+	loaders_Loader.call(this,new msignal_Signal1(),$bind(this,this.resolve),"/list.json");
+};
+loaders_Gallery.__name__ = true;
+loaders_Gallery.__super__ = loaders_Loader;
+loaders_Gallery.prototype = $extend(loaders_Loader.prototype,{
+	resolve: function(data) {
+		return parsers_Gallery.parse(data);
+	}
+	,listen: function(callback) {
+		this.signal.add(callback);
+	}
+});
 var msignal_Signal = function(valueClasses) {
 	if(valueClasses == null) {
 		valueClasses = [];
@@ -572,69 +631,9 @@ msignal_SlotList.prototype = {
 		return null;
 	}
 };
-var src_Gallery = function() {
-};
-src_Gallery.__name__ = true;
-src_Gallery.prototype = {
-	load: function() {
-		var galleryLoader = new src_loaders_Gallery();
-		galleryLoader.listen($bind(this,this.onLoad));
-		galleryLoader.load();
-	}
-	,onLoad: function(gallery) {
-		var galleryViewer = new src_viewers_Gallery(gallery);
-		galleryViewer.mount("gallery");
-	}
-};
-var src_Main = function() { };
-src_Main.__name__ = true;
-src_Main.main = function() {
-	var gallery = new src_Gallery();
-	gallery.load();
-};
-var src_loaders_Loader = function(signal,parser,restUrl) {
-	if(restUrl == null) {
-		restUrl = "";
-	}
-	this.baseUrl = "http://localhost/gallery";
-	this.restUrl = restUrl;
-	this.signal = signal;
-	this.parser = parser;
-};
-src_loaders_Loader.__name__ = true;
-src_loaders_Loader.prototype = {
-	load: function() {
-		var request = new yloader_valueObject_Request(this.baseUrl + this.restUrl);
-		var loader = new yloader_impl_js_XMLHttpRequestLoader(request);
-		loader.onResponse = $bind(this,this.onResponse);
-		loader.load();
-	}
-	,onResponse: function(response) {
-		if(response.success) {
-			this.signal.dispatch(this.parser(JSON.parse(response.data)));
-		} else {
-			console.log("Error: ");
-			console.log(response);
-		}
-	}
-};
-var src_loaders_Gallery = function() {
-	var signal = new msignal_Signal1();
-	src_loaders_Loader.call(this,signal,$bind(this,this.resolve),"/list.json");
-};
-src_loaders_Gallery.__name__ = true;
-src_loaders_Gallery.__super__ = src_loaders_Loader;
-src_loaders_Gallery.prototype = $extend(src_loaders_Loader.prototype,{
-	resolve: function(data) {
-		return src_parsers_Gallery.parse(data);
-	}
-	,listen: function(listener) {
-		this.signal.add(listener);
-	}
-});
-var src_parsers_Gallery = function() { };
-src_parsers_Gallery.__name__ = true;
-src_parsers_Gallery.parse = function(unparsed) {
+var parsers_Gallery = function() { };
+parsers_Gallery.__name__ = true;
+parsers_Gallery.parse = function(unparsed) {
 	var title;
 	var images;
 	if(unparsed.title != null) {
@@ -645,7 +644,7 @@ src_parsers_Gallery.parse = function(unparsed) {
 	}
 	if(unparsed.images != null) {
 		try {
-			images = src_parsers_Image.parseMany(unparsed.images);
+			images = parsers_Image.parseMany(unparsed.images);
 		} catch( e ) {
 			console.log("Failed to parse 'images' in Gallery.parse(unparsed: Dynamic)");
 			return null;
@@ -654,13 +653,13 @@ src_parsers_Gallery.parse = function(unparsed) {
 		console.log("Missing property 'images' in Gallery.parse(unparsed: Dynamic)");
 		return null;
 	}
-	return new src_skeletons_Gallery(title,images);
+	return new skeletons_Gallery(title,images);
 };
-var src_parsers_Image = function() { };
-src_parsers_Image.__name__ = true;
-src_parsers_Image.parse = function(unparsed) {
+var parsers_Image = function() { };
+parsers_Image.__name__ = true;
+parsers_Image.parse = function(unparsed) {
 	var title;
-	var src1;
+	var src;
 	if(unparsed.title != null) {
 		title = unparsed.title;
 	} else {
@@ -668,38 +667,38 @@ src_parsers_Image.parse = function(unparsed) {
 		return null;
 	}
 	if(unparsed.src != null) {
-		src1 = unparsed.src;
+		src = unparsed.src;
 	} else {
 		console.log("Missing property src in Iage.parse(unparsed: Dynamic)");
 		return null;
 	}
-	return new src_skeletons_Image(title,src1);
+	return new skeletons_Image(title,src);
 };
-src_parsers_Image.parseMany = function(unparsed) {
+parsers_Image.parseMany = function(unparsed) {
 	var images = [];
 	var _g = 0;
 	while(_g < unparsed.length) {
 		var img = unparsed[_g];
 		++_g;
-		images.push(src_parsers_Image.parse(img));
+		images.push(parsers_Image.parse(img));
 	}
 	return images;
 };
-var src_skeletons_Gallery = function(title,images) {
+var skeletons_Gallery = function(title,images) {
 	this.title = title;
 	this.images = images;
 };
-src_skeletons_Gallery.__name__ = true;
-var src_skeletons_Image = function(title,src1) {
+skeletons_Gallery.__name__ = true;
+var skeletons_Image = function(title,src) {
 	this.title = title;
-	this.src = src1;
+	this.src = src;
 };
-src_skeletons_Image.__name__ = true;
-var src_viewers_Gallery = function(gallery) {
+skeletons_Image.__name__ = true;
+var viewers_Gallery = function(gallery) {
 	this.gallery = gallery;
 };
-src_viewers_Gallery.__name__ = true;
-src_viewers_Gallery.prototype = {
+viewers_Gallery.__name__ = true;
+viewers_Gallery.prototype = {
 	mount: function(nodeId) {
 		var galleryNode = this.createNode();
 		window.document.getElementById(nodeId).appendChild(galleryNode);
@@ -711,7 +710,7 @@ src_viewers_Gallery.prototype = {
 		galleryTitleNode.innerText = this.gallery.title;
 		galleryTitleNode.className = "gallery-title";
 		this.gallery.images.map(function(image) {
-			var imageViewer = new src_viewers_Image(image);
+			var imageViewer = new viewers_Image(image);
 			var imageNode = imageViewer.createNode();
 			galleryImagesNode.appendChild(imageNode);
 		});
@@ -720,11 +719,11 @@ src_viewers_Gallery.prototype = {
 		return galleryNode;
 	}
 };
-var src_viewers_Image = function(image) {
+var viewers_Image = function(image) {
 	this.image = image;
 };
-src_viewers_Image.__name__ = true;
-src_viewers_Image.prototype = {
+viewers_Image.__name__ = true;
+viewers_Image.prototype = {
 	mount: function(nodeId) {
 		var imageNode = this.createNode();
 		window.document.getElementById(nodeId).appendChild(imageNode);
@@ -984,5 +983,5 @@ yloader_enums_Status.UNKNOWN = -2;
 yloader_enums_Status.FAILED_TO_CONNECT_OR_RESOLVE_HOST = -1;
 yloader_enums_Status.UNKNOWN_HOST = 12007;
 yloader_enums_Status.FAILED_TO_CONNECT_TO_HOST = 12029;
-src_Main.main();
+Main.main();
 })();

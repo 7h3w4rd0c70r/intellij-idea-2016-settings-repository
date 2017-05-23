@@ -8,33 +8,30 @@ import yloader.valueObject.Response;
 import msignal.Signal;
 import haxe.Json;
 
-class Loader<T> {
+class Loader {
     var baseUrl: String = "http://localhost/gallery";
     var restUrl: String;
-    var completed: T;
+    var signal: Dynamic;
     var parser: Dynamic->Dynamic;
 
-    public function new(parser: Dynamic->Dynamic, restUrl: String = "") {
+    public function new(signal: Dynamic, parser: Dynamic->Dynamic, restUrl: String = "") {
         this.restUrl = restUrl;
+        this.signal = signal;
         this.parser = parser;
-        this.completed = new T();
-    }
-
-    public function listen(listener: Dynamic->Void) {
-        signal.add(listener);
     }
 
     public function load() {
         var request = new Request(this.baseUrl + restUrl);
         var loader = new XMLHttpRequestLoader(request);
+        
         loader.onResponse = onResponse;
+
         loader.load();
     }
 
-    function onResponse(response: Response) {
+    function onResponse (response: Response) {
         if (response.success) {
-            var jsonParsed: Dynamic = Json.parse(response.data);
-            completed.dispatch(parser.parse(jsonParsed));
+            signal.dispatch(parser(Json.parse(response.data)));
         } else {
             trace("Error: ");
             trace(response);

@@ -1,12 +1,11 @@
 
 class Gallery {
-    var loader: loaders.Loader<msignal.Signal.Signal1<skeletons.Gallery>> = new loaders.Loader<msignal.Signal.Signal1<skeletons.Gallery>>(skeletons.Gallery, parsers.Gallery, "/list.json");
-
     public function new() { }
 
     public function load() {
-        loader.completed(onLoad);
-        loader.load();
+        var galleryLoader: loaders.Gallery = new loaders.Gallery();
+        galleryLoader.listen(onLoad);
+        galleryLoader.load();
     }
 
     function onLoad (gallery: skeletons.Gallery) {
