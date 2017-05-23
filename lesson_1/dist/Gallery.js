@@ -28,6 +28,28 @@ HxOverrides.substr = function(s,pos,len) {
 	return s.substr(pos,len);
 };
 Math.__name__ = true;
+var Reflect = function() { };
+Reflect.__name__ = true;
+Reflect.isFunction = function(f) {
+	if(typeof(f) == "function") {
+		return !(f.__name__ || f.__ename__);
+	} else {
+		return false;
+	}
+};
+Reflect.compareMethods = function(f1,f2) {
+	if(f1 == f2) {
+		return true;
+	}
+	if(!Reflect.isFunction(f1) || !Reflect.isFunction(f2)) {
+		return false;
+	}
+	if(f1.scope == f2.scope && f1.method == f2.method) {
+		return f1.method != null;
+	} else {
+		return false;
+	}
+};
 var Std = function() { };
 Std.__name__ = true;
 Std.string = function(s) {
@@ -182,72 +204,546 @@ js_Browser.createXMLHttpRequest = function() {
 	}
 	throw new js__$Boot_HaxeError("Unable to create XMLHttpRequest object.");
 };
-var lesson_$1_src_Gallery = function() {
-};
-lesson_$1_src_Gallery.__name__ = true;
-lesson_$1_src_Gallery.prototype = {
-	load: function() {
-		var _gthis = this;
-		var api = new lesson_$1_src_Remote("http://localhost/gallery");
-		api.get("/list.json").then(function(jsonGallery) {
-			var gallery = JSON.parse(jsonGallery);
-			_gthis.appendImages(gallery.imgs);
-		});
+var msignal_Signal = function(valueClasses) {
+	if(valueClasses == null) {
+		valueClasses = [];
 	}
-	,appendImages: function(imgs) {
-		var _g = 0;
-		while(_g < imgs.length) {
-			var img = imgs[_g];
-			++_g;
-			var imgNode = lesson_$1_src_Image.create(img.desc,img.src);
-			window.document.getElementById("gallery").appendChild(imgNode);
+	this.valueClasses = valueClasses;
+	this.slots = msignal_SlotList.NIL;
+	this.priorityBased = false;
+};
+msignal_Signal.__name__ = true;
+msignal_Signal.prototype = {
+	add: function(listener) {
+		return this.registerListener(listener);
+	}
+	,addOnce: function(listener) {
+		return this.registerListener(listener,true);
+	}
+	,addWithPriority: function(listener,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		return this.registerListener(listener,false,priority);
+	}
+	,addOnceWithPriority: function(listener,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		return this.registerListener(listener,true,priority);
+	}
+	,remove: function(listener) {
+		var slot = this.slots.find(listener);
+		if(slot == null) {
+			return null;
+		}
+		this.slots = this.slots.filterNot(listener);
+		return slot;
+	}
+	,removeAll: function() {
+		this.slots = msignal_SlotList.NIL;
+	}
+	,registerListener: function(listener,once,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		if(once == null) {
+			once = false;
+		}
+		if(this.registrationPossible(listener,once)) {
+			var newSlot = this.createSlot(listener,once,priority);
+			if(!this.priorityBased && priority != 0) {
+				this.priorityBased = true;
+			}
+			if(!this.priorityBased && priority == 0) {
+				this.slots = this.slots.prepend(newSlot);
+			} else {
+				this.slots = this.slots.insertWithPriority(newSlot);
+			}
+			return newSlot;
+		}
+		return this.slots.find(listener);
+	}
+	,registrationPossible: function(listener,once) {
+		if(!this.slots.nonEmpty) {
+			return true;
+		}
+		var existingSlot = this.slots.find(listener);
+		if(existingSlot == null) {
+			return true;
+		}
+		return false;
+	}
+	,createSlot: function(listener,once,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		if(once == null) {
+			once = false;
+		}
+		return null;
+	}
+	,get_numListeners: function() {
+		return this.slots.get_length();
+	}
+};
+var msignal_Signal0 = function() {
+	msignal_Signal.call(this);
+};
+msignal_Signal0.__name__ = true;
+msignal_Signal0.__super__ = msignal_Signal;
+msignal_Signal0.prototype = $extend(msignal_Signal.prototype,{
+	dispatch: function() {
+		var slotsToProcess = this.slots;
+		while(slotsToProcess.nonEmpty) {
+			slotsToProcess.head.execute();
+			slotsToProcess = slotsToProcess.tail;
+		}
+	}
+	,createSlot: function(listener,once,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		if(once == null) {
+			once = false;
+		}
+		return new msignal_Slot0(this,listener,once,priority);
+	}
+});
+var msignal_Signal1 = function(type) {
+	msignal_Signal.call(this,[type]);
+};
+msignal_Signal1.__name__ = true;
+msignal_Signal1.__super__ = msignal_Signal;
+msignal_Signal1.prototype = $extend(msignal_Signal.prototype,{
+	dispatch: function(value) {
+		var slotsToProcess = this.slots;
+		while(slotsToProcess.nonEmpty) {
+			slotsToProcess.head.execute(value);
+			slotsToProcess = slotsToProcess.tail;
+		}
+	}
+	,createSlot: function(listener,once,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		if(once == null) {
+			once = false;
+		}
+		return new msignal_Slot1(this,listener,once,priority);
+	}
+});
+var msignal_Signal2 = function(type1,type2) {
+	msignal_Signal.call(this,[type1,type2]);
+};
+msignal_Signal2.__name__ = true;
+msignal_Signal2.__super__ = msignal_Signal;
+msignal_Signal2.prototype = $extend(msignal_Signal.prototype,{
+	dispatch: function(value1,value2) {
+		var slotsToProcess = this.slots;
+		while(slotsToProcess.nonEmpty) {
+			slotsToProcess.head.execute(value1,value2);
+			slotsToProcess = slotsToProcess.tail;
+		}
+	}
+	,createSlot: function(listener,once,priority) {
+		if(priority == null) {
+			priority = 0;
+		}
+		if(once == null) {
+			once = false;
+		}
+		return new msignal_Slot2(this,listener,once,priority);
+	}
+});
+var msignal_Slot = function(signal,listener,once,priority) {
+	if(priority == null) {
+		priority = 0;
+	}
+	if(once == null) {
+		once = false;
+	}
+	this.signal = signal;
+	this.set_listener(listener);
+	this.once = once;
+	this.priority = priority;
+	this.enabled = true;
+};
+msignal_Slot.__name__ = true;
+msignal_Slot.prototype = {
+	remove: function() {
+		this.signal.remove(this.listener);
+	}
+	,set_listener: function(value) {
+		return this.listener = value;
+	}
+};
+var msignal_Slot0 = function(signal,listener,once,priority) {
+	if(priority == null) {
+		priority = 0;
+	}
+	if(once == null) {
+		once = false;
+	}
+	msignal_Slot.call(this,signal,listener,once,priority);
+};
+msignal_Slot0.__name__ = true;
+msignal_Slot0.__super__ = msignal_Slot;
+msignal_Slot0.prototype = $extend(msignal_Slot.prototype,{
+	execute: function() {
+		if(!this.enabled) {
+			return;
+		}
+		if(this.once) {
+			this.remove();
+		}
+		this.listener();
+	}
+});
+var msignal_Slot1 = function(signal,listener,once,priority) {
+	if(priority == null) {
+		priority = 0;
+	}
+	if(once == null) {
+		once = false;
+	}
+	msignal_Slot.call(this,signal,listener,once,priority);
+};
+msignal_Slot1.__name__ = true;
+msignal_Slot1.__super__ = msignal_Slot;
+msignal_Slot1.prototype = $extend(msignal_Slot.prototype,{
+	execute: function(value1) {
+		if(!this.enabled) {
+			return;
+		}
+		if(this.once) {
+			this.remove();
+		}
+		if(this.param != null) {
+			value1 = this.param;
+		}
+		this.listener(value1);
+	}
+});
+var msignal_Slot2 = function(signal,listener,once,priority) {
+	if(priority == null) {
+		priority = 0;
+	}
+	if(once == null) {
+		once = false;
+	}
+	msignal_Slot.call(this,signal,listener,once,priority);
+};
+msignal_Slot2.__name__ = true;
+msignal_Slot2.__super__ = msignal_Slot;
+msignal_Slot2.prototype = $extend(msignal_Slot.prototype,{
+	execute: function(value1,value2) {
+		if(!this.enabled) {
+			return;
+		}
+		if(this.once) {
+			this.remove();
+		}
+		if(this.param1 != null) {
+			value1 = this.param1;
+		}
+		if(this.param2 != null) {
+			value2 = this.param2;
+		}
+		this.listener(value1,value2);
+	}
+});
+var msignal_SlotList = function(head,tail) {
+	this.nonEmpty = false;
+	if(head == null && tail == null) {
+		this.nonEmpty = false;
+	} else if(head != null) {
+		this.head = head;
+		this.tail = tail == null ? msignal_SlotList.NIL : tail;
+		this.nonEmpty = true;
+	}
+};
+msignal_SlotList.__name__ = true;
+msignal_SlotList.prototype = {
+	get_length: function() {
+		if(!this.nonEmpty) {
+			return 0;
+		}
+		if(this.tail == msignal_SlotList.NIL) {
+			return 1;
+		}
+		var result = 0;
+		var p = this;
+		while(p.nonEmpty) {
+			++result;
+			p = p.tail;
+		}
+		return result;
+	}
+	,prepend: function(slot) {
+		return new msignal_SlotList(slot,this);
+	}
+	,append: function(slot) {
+		if(slot == null) {
+			return this;
+		}
+		if(!this.nonEmpty) {
+			return new msignal_SlotList(slot);
+		}
+		if(this.tail == msignal_SlotList.NIL) {
+			return new msignal_SlotList(slot).prepend(this.head);
+		}
+		var wholeClone = new msignal_SlotList(this.head);
+		var subClone = wholeClone;
+		var current = this.tail;
+		while(current.nonEmpty) {
+			subClone = subClone.tail = new msignal_SlotList(current.head);
+			current = current.tail;
+		}
+		subClone.tail = new msignal_SlotList(slot);
+		return wholeClone;
+	}
+	,insertWithPriority: function(slot) {
+		if(!this.nonEmpty) {
+			return new msignal_SlotList(slot);
+		}
+		var priority = slot.priority;
+		if(priority >= this.head.priority) {
+			return this.prepend(slot);
+		}
+		var wholeClone = new msignal_SlotList(this.head);
+		var subClone = wholeClone;
+		var current = this.tail;
+		while(current.nonEmpty) {
+			if(priority > current.head.priority) {
+				subClone.tail = current.prepend(slot);
+				return wholeClone;
+			}
+			subClone = subClone.tail = new msignal_SlotList(current.head);
+			current = current.tail;
+		}
+		subClone.tail = new msignal_SlotList(slot);
+		return wholeClone;
+	}
+	,filterNot: function(listener) {
+		if(!this.nonEmpty || listener == null) {
+			return this;
+		}
+		if(Reflect.compareMethods(this.head.listener,listener)) {
+			return this.tail;
+		}
+		var wholeClone = new msignal_SlotList(this.head);
+		var subClone = wholeClone;
+		var current = this.tail;
+		while(current.nonEmpty) {
+			if(Reflect.compareMethods(current.head.listener,listener)) {
+				subClone.tail = current.tail;
+				return wholeClone;
+			}
+			subClone = subClone.tail = new msignal_SlotList(current.head);
+			current = current.tail;
+		}
+		return this;
+	}
+	,contains: function(listener) {
+		if(!this.nonEmpty) {
+			return false;
+		}
+		var p = this;
+		while(p.nonEmpty) {
+			if(Reflect.compareMethods(p.head.listener,listener)) {
+				return true;
+			}
+			p = p.tail;
+		}
+		return false;
+	}
+	,find: function(listener) {
+		if(!this.nonEmpty) {
+			return null;
+		}
+		var p = this;
+		while(p.nonEmpty) {
+			if(Reflect.compareMethods(p.head.listener,listener)) {
+				return p.head;
+			}
+			p = p.tail;
+		}
+		return null;
+	}
+};
+var src_Gallery = function() {
+};
+src_Gallery.__name__ = true;
+src_Gallery.prototype = {
+	load: function() {
+		var galleryLoader = new src_loaders_Gallery();
+		galleryLoader.listen($bind(this,this.onLoad));
+		galleryLoader.load();
+	}
+	,onLoad: function(gallery) {
+		var galleryViewer = new src_viewers_Gallery(gallery);
+		galleryViewer.mount("gallery");
+	}
+};
+var src_Main = function() { };
+src_Main.__name__ = true;
+src_Main.main = function() {
+	var gallery = new src_Gallery();
+	gallery.load();
+};
+var src_loaders_Loader = function(signal,parser,restUrl) {
+	if(restUrl == null) {
+		restUrl = "";
+	}
+	this.baseUrl = "http://localhost/gallery";
+	this.restUrl = restUrl;
+	this.signal = signal;
+	this.parser = parser;
+};
+src_loaders_Loader.__name__ = true;
+src_loaders_Loader.prototype = {
+	load: function() {
+		var request = new yloader_valueObject_Request(this.baseUrl + this.restUrl);
+		var loader = new yloader_impl_js_XMLHttpRequestLoader(request);
+		loader.onResponse = $bind(this,this.onResponse);
+		loader.load();
+	}
+	,onResponse: function(response) {
+		if(response.success) {
+			this.signal.dispatch(this.parser(JSON.parse(response.data)));
+		} else {
+			console.log("Error: ");
+			console.log(response);
 		}
 	}
 };
-var lesson_$1_src_Image = function() { };
-lesson_$1_src_Image.__name__ = true;
-lesson_$1_src_Image.create = function(desc,src) {
-	var imgContainerNode = window.document.createElement("div");
-	var descNode = window.document.createElement("div");
-	var imgNode = window.document.createElement("img");
-	var descContainerNode = window.document.createElement("div");
-	imgContainerNode.className = "container";
-	descContainerNode.className = "middle";
-	imgNode.className = "image";
-	descNode.className = "text";
-	imgNode.setAttribute("src","http://localhost/gallery/" + src);
-	descNode.innerText = desc;
-	descContainerNode.appendChild(descNode);
-	imgContainerNode.appendChild(imgNode);
-	imgContainerNode.appendChild(descContainerNode);
-	return imgContainerNode;
+var src_loaders_Gallery = function() {
+	var signal = new msignal_Signal1();
+	src_loaders_Loader.call(this,signal,$bind(this,this.resolve),"/list.json");
 };
-var lesson_$1_src_Main = function() { };
-lesson_$1_src_Main.__name__ = true;
-lesson_$1_src_Main.main = function() {
-	var Gallery = new lesson_$1_src_Gallery();
-	Gallery.load();
+src_loaders_Gallery.__name__ = true;
+src_loaders_Gallery.__super__ = src_loaders_Loader;
+src_loaders_Gallery.prototype = $extend(src_loaders_Loader.prototype,{
+	resolve: function(data) {
+		return src_parsers_Gallery.parse(data);
+	}
+	,listen: function(listener) {
+		this.signal.add(listener);
+	}
+});
+var src_parsers_Gallery = function() { };
+src_parsers_Gallery.__name__ = true;
+src_parsers_Gallery.parse = function(unparsed) {
+	var title;
+	var images;
+	if(unparsed.title != null) {
+		title = unparsed.title;
+	} else {
+		console.log("Missing property 'title' in Gallery.parse(unparsed: Dynamic)");
+		return null;
+	}
+	if(unparsed.images != null) {
+		try {
+			images = src_parsers_Image.parseMany(unparsed.images);
+		} catch( e ) {
+			console.log("Failed to parse 'images' in Gallery.parse(unparsed: Dynamic)");
+			return null;
+		}
+	} else {
+		console.log("Missing property 'images' in Gallery.parse(unparsed: Dynamic)");
+		return null;
+	}
+	return new src_skeletons_Gallery(title,images);
 };
-var lesson_$1_src_Remote = function(baseUrl) {
-	this.baseUrl = baseUrl;
+var src_parsers_Image = function() { };
+src_parsers_Image.__name__ = true;
+src_parsers_Image.parse = function(unparsed) {
+	var title;
+	var src1;
+	if(unparsed.title != null) {
+		title = unparsed.title;
+	} else {
+		console.log("Missing property title in Image.parse(unparsed: Dynamic)");
+		return null;
+	}
+	if(unparsed.src != null) {
+		src1 = unparsed.src;
+	} else {
+		console.log("Missing property src in Iage.parse(unparsed: Dynamic)");
+		return null;
+	}
+	return new src_skeletons_Image(title,src1);
 };
-lesson_$1_src_Remote.__name__ = true;
-lesson_$1_src_Remote.prototype = {
-	get: function(url) {
-		var _gthis = this;
-		return new Promise(function(resolve,reject) {
-			var request = new yloader_valueObject_Request(_gthis.baseUrl + url);
-			var loader = new yloader_impl_js_XMLHttpRequestLoader(request);
-			loader.onResponse = function(response) {
-				if(response.success) {
-					resolve(response.data);
-				} else {
-					console.log(response);
-					reject("");
-				}
-			};
-			loader.load();
+src_parsers_Image.parseMany = function(unparsed) {
+	var images = [];
+	var _g = 0;
+	while(_g < unparsed.length) {
+		var img = unparsed[_g];
+		++_g;
+		images.push(src_parsers_Image.parse(img));
+	}
+	return images;
+};
+var src_skeletons_Gallery = function(title,images) {
+	this.title = title;
+	this.images = images;
+};
+src_skeletons_Gallery.__name__ = true;
+var src_skeletons_Image = function(title,src1) {
+	this.title = title;
+	this.src = src1;
+};
+src_skeletons_Image.__name__ = true;
+var src_viewers_Gallery = function(gallery) {
+	this.gallery = gallery;
+};
+src_viewers_Gallery.__name__ = true;
+src_viewers_Gallery.prototype = {
+	mount: function(nodeId) {
+		var galleryNode = this.createNode();
+		window.document.getElementById(nodeId).appendChild(galleryNode);
+	}
+	,createNode: function() {
+		var galleryNode = window.document.createElement("div");
+		var galleryTitleNode = window.document.createElement("div");
+		var galleryImagesNode = window.document.createElement("div");
+		galleryTitleNode.innerText = this.gallery.title;
+		galleryTitleNode.className = "gallery-title";
+		this.gallery.images.map(function(image) {
+			var imageViewer = new src_viewers_Image(image);
+			var imageNode = imageViewer.createNode();
+			galleryImagesNode.appendChild(imageNode);
 		});
+		galleryNode.appendChild(galleryTitleNode);
+		galleryNode.appendChild(galleryImagesNode);
+		return galleryNode;
+	}
+};
+var src_viewers_Image = function(image) {
+	this.image = image;
+};
+src_viewers_Image.__name__ = true;
+src_viewers_Image.prototype = {
+	mount: function(nodeId) {
+		var imageNode = this.createNode();
+		window.document.getElementById(nodeId).appendChild(imageNode);
+	}
+	,createNode: function() {
+		var imgContainerNode = window.document.createElement("div");
+		var descNode = window.document.createElement("div");
+		var imgNode = window.document.createElement("img");
+		var descContainerNode = window.document.createElement("div");
+		imgContainerNode.className = "container";
+		descContainerNode.className = "middle";
+		imgNode.className = "image";
+		descNode.className = "text";
+		imgNode.setAttribute("src","http://localhost/gallery/" + this.image.src);
+		descNode.innerText = this.image.title;
+		descContainerNode.appendChild(descNode);
+		imgContainerNode.appendChild(imgNode);
+		imgContainerNode.appendChild(descContainerNode);
+		return imgContainerNode;
 	}
 };
 var yloader_ILoader = function() { };
@@ -483,9 +979,10 @@ var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 String.__name__ = true;
 Array.__name__ = true;
+msignal_SlotList.NIL = new msignal_SlotList(null,null);
 yloader_enums_Status.UNKNOWN = -2;
 yloader_enums_Status.FAILED_TO_CONNECT_OR_RESOLVE_HOST = -1;
 yloader_enums_Status.UNKNOWN_HOST = 12007;
 yloader_enums_Status.FAILED_TO_CONNECT_TO_HOST = 12029;
-lesson_$1_src_Main.main();
+src_Main.main();
 })();
