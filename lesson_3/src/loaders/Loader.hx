@@ -34,7 +34,7 @@ class Loader<T> {
     function onResponse(response: Response) {
         if (response.success) {
             var jsonParsed: Dynamic = Json.parse(response.data);
-            completed.dispatch(parser(jsonParsed));
+            haxe.Timer.delay(function () { completed.dispatch(parser(jsonParsed)); }, 1500);
         } else {
             trace("Error: ");
             trace(response);
