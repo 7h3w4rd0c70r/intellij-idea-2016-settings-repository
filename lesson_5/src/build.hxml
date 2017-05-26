@@ -1,0 +1,8 @@
+
+-main Main.hx
+-js dist/People.js
+-lib msignal
+-lib yloader
+-lib mmvc
+-lib react
+-D react_global
