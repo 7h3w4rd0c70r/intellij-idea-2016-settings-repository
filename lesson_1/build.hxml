@@ -1,7 +1,0 @@
-
--cp src
--main Main.hx
--js .dist/Gallery.js
--lib yloader
--lib msignal
-
