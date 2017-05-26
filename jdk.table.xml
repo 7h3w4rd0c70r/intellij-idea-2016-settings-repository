@@ -1,0 +1,34 @@
+<application>
+  <component name="ProjectJdkTable">
+    <jdk version="2">
+      <name value="Haxe 3.4.2" />
+      <type value="Haxe toolkit" />
+      <version value="3.4.2" />
+      <homePath value="/usr/local/lib/haxe" />
+      <roots>
+        <annotationsPath>
+          <root type="composite" />
+        </annotationsPath>
+        <classPath>
+          <root type="composite">
+            <root type="simple" url="file:///usr/local/lib/haxe/std" />
+          </root>
+        </classPath>
+        <javadocPath>
+          <root type="composite">
+            <root type="simple" url="file:///usr/local/lib/haxe/doc" />
+          </root>
+        </javadocPath>
+        <sourcePath>
+          <root type="composite">
+            <root type="simple" url="file:///usr/local/lib/haxe/std" />
+          </root>
+        </sourcePath>
+      </roots>
+      <additional>
+        <option name="haxelibPath" value="/usr/local/lib/haxe/haxelib" />
+        <option name="nekoBinPath" value="/usr/local/lib/neko/neko" />
+      </additional>
+    </jdk>
+  </component>
+</application>
