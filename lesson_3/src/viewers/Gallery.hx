@@ -10,13 +10,13 @@ import react.ReactMacro.jsx;
 import viewers.Image;
 
 class Gallery extends ReactComponent {
-    var images = [ ];
+    // var images = [ ];
 
     public function new(props: Dynamic) {
         super();
-        props.gallery.images.map(function (image) {
-            images.push(jsx('<$Image image=$image />'));
-        });
+        // props.gallery.images.map(function (image) {
+        //     images.push(jsx('<$Image image=$image />'));
+        // });
     }
 
     override function render() {
@@ -26,9 +26,9 @@ class Gallery extends ReactComponent {
                     ${props.gallery.title}
                 </div>
                 <div>
-                    ${images}
+                    ${[for (image in props.gallery.images) jsx('<$Image image=$image />')]}
                 </div>
             </div>
-        ');  //${[for (image in props.gallery.images) jsx('<$Image image=$image />')]}
+        ');
     }
 }
