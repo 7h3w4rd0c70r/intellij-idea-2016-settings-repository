@@ -1,4 +1,5 @@
 
+-cp src
 -main Main.hx
 -js dist/People.js
 -lib msignal
