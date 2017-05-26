@@ -1,7 +1,9 @@
-
-
+.idea/
 .vscode/
 
 node_modules/
+
+.DS_Store
+patrik-simunic-first-app.iml
 
 
