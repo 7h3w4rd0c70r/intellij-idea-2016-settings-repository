@@ -1,0 +1,6 @@
+<application>
+  <component name="MarkdownApplicationSettings">
+    <MarkdownCssSettings StylesheetUri="jar:file:/Users/patrik.simunic/Library/Application%20Support/IdeaIC2016.3/markdown/lib/markdown.jar!/org/intellij/plugins/markdown/settings/darcula.css" />
+    <MarkdownPreviewSettings DefaultSplitLayout="Show preview only" />
+  </component>
+</application>
